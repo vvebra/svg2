@@ -1,0 +1,20 @@
+quarkus:
+  http:
+    host: "0.0.0.0"
+
+  log:
+    level: INFO
+    category:
+      "lt.uhealth":
+        level: DEBUG
+      #"org.jboss.resteasy.reactive.client.logging":
+      #  level: DEBUG
+
+  rest-client:
+    connect-timeout: 15000
+    read-timeout: 30000
+    #logging:
+    #  scope: request-response
+    #  body-limit: 4096
+    aipico:
+      url: "https://europe-west1-uh-protected.cloudfunctions.net/aipico"
