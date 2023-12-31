@@ -9,7 +9,6 @@ import lt.uhealth.aipi.svg.exception.AppRuntimeException;
 import lt.uhealth.aipi.svg.exception.RestApiException;
 import lt.uhealth.aipi.svg.model.MagicItemWithNotes;
 import lt.uhealth.aipi.svg.model.Payload;
-import lt.uhealth.aipi.svg.util.ExceptionMapper;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,7 +37,6 @@ public class AipiCoService {
         return Uni.createFrom().item(magic)
                 .invoke(m -> LOG.debug("Requesting getMagic with {}", m))
                 .flatMap(aipiCoClient::getMagic)
-                .onFailure().transform(ExceptionMapper::fromWebClientResponseException)
                 .onFailure().invoke(t -> LOG.error("Error while getMagic {}: {}: {}",
                         magic, t.getClass(), t.getMessage()))
                 .onFailure().retry().withBackOff(Duration.ofMillis(200)).atMost(3)
@@ -83,22 +81,18 @@ public class AipiCoService {
             }
         }
 
-        uni = uni
+        Uni<MagicItemWithNotes> uni2 = Uni.createFrom().item(magicItemWithNotes)
                 .invoke(m -> LOG.debug("Requesting postMagic with index: {}", m.magicItem().index()))
                 .flatMap(m -> aipiCoClient.postMagic(m.magic(), Payload.fromMagicItemWithNotes(m)))
-                .onFailure().transform(ExceptionMapper::fromWebClientResponseException)
                 .onFailure().invoke(t -> LOG.error("Error while postMagic {}: {}: {}",
                         magicItemWithNotes.magicItem().index(), t.getClass(), t.getMessage()))
                 .onFailure(t -> !tooEarlyOrTooLate(t)).retry()
                         .withBackOff(Duration.ofMillis(10)).atMost(3)
                 .map(magicItemWithNotes::withAnswer)
-                .invoke(m -> LOG.debug("Answer from postMagic {}: {}", m.magicItem().index(), m.answer()));
+                .invoke(m -> LOG.debug("Answer from postMagic {}: {}", m.magicItem().index(), m.answer()))
+                .onFailure(ignored -> prevThrowable == null).recoverWithUni(t -> postMagic(magicItemWithNotes, t));
 
-        if (prevThrowable == null){
-            uni = uni.onFailure().recoverWithUni(t -> postMagic(magicItemWithNotes, t));
-        }
-
-        return uni;
+        return uni.flatMap(ignored -> uni2);
     }
 
     boolean tooEarlyOrTooLate(Throwable t){

@@ -1,6 +1,5 @@
 package lt.uhealth.aipi.svg.util;
 
-import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import lt.uhealth.aipi.svg.model.RestError;
 import lt.uhealth.aipi.svg.exception.RestApiException;
@@ -11,20 +10,10 @@ public interface ExceptionMapper {
 
     Logger LOG = LoggerFactory.getLogger(ExceptionMapper.class);
 
-    static Throwable fromWebClientResponseException(Throwable t){
-        if (t instanceof WebApplicationException we){
-            try {
-                Response response = we.getResponse();
-                String errorString = extractResponseText(response);
-                RestError restError = parseError(errorString);
-                return new RestApiException(response.getStatus(), errorString, restError);
-            } catch (RuntimeException re){
-                LOG.error("Error while converting WebApplicationException", re);
-                return t;
-            }
-        }
-
-        return t;
+    static RestApiException fromResponse(Response response){
+        String errorString = extractResponseText(response);
+        RestError restError = parseError(errorString);
+        return new RestApiException(response.getStatus(), errorString, restError);
     }
 
     static String extractResponseText(Response response){
