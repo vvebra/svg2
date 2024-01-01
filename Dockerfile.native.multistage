@@ -1,0 +1,25 @@
+FROM quay.io/quarkus/ubi-quarkus-mandrel-builder-image:23.1-java21 AS build
+
+COPY --chown=quarkus:quarkus mvnw /workspace/mvnw
+COPY --chown=quarkus:quarkus .mvn /workspace/.mvn
+COPY --chown=quarkus:quarkus pom.xml /workspace/
+COPY src /workspace/src
+
+USER quarkus
+WORKDIR /workspace
+
+RUN ./mvnw package -Pnative
+
+FROM debian:12.2-slim
+
+RUN apt-get update && apt-get upgrade -y && apt-get install curl -y && apt-get clean
+
+RUN addgroup --system --gid 201 nativeuser && \
+    adduser --system --gid 201 nativeuser
+
+COPY --from=build /workspace/target/*-runner /opt/app/application
+
+USER nativeuser
+WORKDIR /opt/app
+VOLUME ["/tmp"]
+ENTRYPOINT ./application

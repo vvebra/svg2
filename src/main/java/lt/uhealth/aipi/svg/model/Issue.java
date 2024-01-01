@@ -1,7 +1,10 @@
 package lt.uhealth.aipi.svg.model;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 import java.util.List;
 
+@RegisterForReflection
 public record Issue(String code, String message, String expected, String received, Params params, List<String> path) {
 
     public boolean isTooLate(){
@@ -20,7 +23,7 @@ public record Issue(String code, String message, String expected, String receive
                 && params.actual() <= params.expected().after();
     }
 
-    public Long tooEarly(){
+    public Long tooEarlyByMillis(){
         if (params == null || params.expected() == null
                 || params.expected().after() == null
                 || params.actual() == null

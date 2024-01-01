@@ -1,0 +1,13 @@
+FROM debian:12.2-slim
+
+RUN apt-get update && apt-get upgrade -y && apt-get install curl -y && apt-get clean
+
+RUN addgroup --system --gid 201 nativeuser && \
+    adduser --system --gid 201 nativeuser
+
+COPY target/*-runner /opt/app/application
+
+USER nativeuser
+WORKDIR /opt/app
+VOLUME ["/tmp"]
+ENTRYPOINT ./application

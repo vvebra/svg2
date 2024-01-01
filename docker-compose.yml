@@ -1,0 +1,14 @@
+services:
+  svg2-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.native
+      #dockerfile: Dockerfile.native.multistage
+    image: svg2-service
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    read_only: true

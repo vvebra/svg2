@@ -1,10 +1,12 @@
 package lt.uhealth.aipi.svg.model;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import lt.uhealth.aipi.svg.exception.AppRuntimeException;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@RegisterForReflection
 public record Payload(String payload, Map<String, String> responses) {
 
     public static Payload fromMagicItemWithNotes(MagicItemWithNotes magicItemWithNotes){
@@ -18,7 +20,7 @@ public record Payload(String payload, Map<String, String> responses) {
 
     private static MagicItemWithNotes checkAnswerExists(MagicItemWithNotes magicItemWithNotes){
         if (magicItemWithNotes.answer().get() == null){
-            throw new AppRuntimeException("Magic item with index=%s does not have an answer"
+            throw new AppRuntimeException("Magic item '%s' does not have an answer"
                     .formatted(magicItemWithNotes.magicItem().index()));
         }
 

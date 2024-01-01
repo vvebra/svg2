@@ -1,10 +1,12 @@
 package lt.uhealth.aipi.svg.model;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
 import lt.uhealth.aipi.svg.util.JsonReader;
 
 import java.util.List;
 import java.util.Objects;
 
+@RegisterForReflection
 public record RestError(String name, String message, List<Issue> issues) {
 
     public boolean isTooLate(){
@@ -15,14 +17,14 @@ public record RestError(String name, String message, List<Issue> issues) {
         return issues != null && issues.stream().anyMatch(Issue::isTooEarly);
     }
 
-    public Long tooEarly(){
+    public Long tooEarlyByMillis(){
         if (issues == null){
             return null;
         }
 
         return issues.stream()
                 .filter(Issue::isTooEarly)
-                .map(Issue::tooEarly)
+                .map(Issue::tooEarlyByMillis)
                 .filter(Objects::nonNull)
                 .findAny()
                 .orElse(null);

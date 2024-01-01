@@ -35,7 +35,7 @@ public class SvgController {
 
         return aipiCoService.getMagic(magic)
                 .toMulti()
-                .flatMap(aipiCoService::processMagicItems)
+                .flatMap(aipiCoService::solveMagicItems)
                 .collect().asList()
                 .map(l -> l.stream()
                         .sorted(Comparator.comparingInt(MagicItemWithNotes::index))

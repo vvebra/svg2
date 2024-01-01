@@ -1,7 +1,10 @@
 package lt.uhealth.aipi.svg.model;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+
 import java.util.List;
 
+@RegisterForReflection
 public record Barrier (String type,
                        Long from,
                        Long until,
