@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @ApplicationScoped
 public class AipiCoService {
@@ -136,11 +137,9 @@ public class AipiCoService {
     }
 
     List<MagicItemWithNotes> toMagicItemsWithNotes(String magic, List<String> magicItemStrings){
-        MagicItemWithNotes[] magicItemsWithNotes = new MagicItemWithNotes[magicItemStrings.size()];
-        for (int i = 0; i < magicItemStrings.size(); i++) {
-            magicItemsWithNotes[i] = MagicItemWithNotes.create(i, magic, magicItemStrings.get(i));
-        }
-
-        return List.of(magicItemsWithNotes);
+        return Stream.iterate(0, i -> i + 1)
+                .limit(magicItemStrings.size())
+                .map(i -> MagicItemWithNotes.create(i, magic, magicItemStrings.get(i)))
+                .toList();
     }
 }
