@@ -1,5 +1,21 @@
 # svg2
 
+This is solution for the "Get Magic" task using "AIπ.Co".
+
+Easiest way to start service is 
+```shell script
+./mvnw quarkus:dev
+```
+
+Better way to start service is 
+```shell script
+./mvnw package
+java -jar target/quarkus-app/quarkus-run.jar
+```
+
+Service is accessible using http://localhost:8080/{:magic} , for example: http://localhost:8080/example .
+
+_____________________________________________________________________________
 This project uses Quarkus, the Supersonic Subatomic Java Framework.
 
 If you want to learn more about Quarkus, please visit its website: https://quarkus.io/ .
