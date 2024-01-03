@@ -4,6 +4,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -31,4 +32,13 @@ public record MagicItem (String magicString,
                 .collect(Collectors.toSet());
     }
 
+    long getUntil(){
+        return Stream.ofNullable(barriers)
+                .flatMap(Collection::stream)
+                .map(Barrier::getUntil)
+                .filter(Objects::nonNull)
+                .mapToLong(l -> l)
+                .min()
+                .orElse(Long.MAX_VALUE);
+    }
 }

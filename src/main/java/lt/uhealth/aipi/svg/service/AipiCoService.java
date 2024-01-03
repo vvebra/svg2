@@ -14,10 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -41,6 +38,7 @@ public class AipiCoService {
                 .onFailure().invoke(t -> LOG.error("Error while getMagic {}: {}: {}",
                         magic, t.getClass(), t.getMessage()))
                 .onFailure().retry().withBackOff(Duration.ofMillis(200)).atMost(3)
+                .invoke(rez -> LOG.debug("getMagic result strings are {}", rez))
                 .map(l -> toMagicItemsWithNotes(magic, l))
                 .invoke(rez -> LOG.debug("getMagic result size is {}", rez.size()));
     }
@@ -49,6 +47,8 @@ public class AipiCoService {
         return Uni.createFrom().item(magicItemWithNotes)
                 .map(this::enrichMagicItems)
                 .map(this::findIndependentMagicItems)
+                .map(this::updateUntil)
+                .map(this::sortByUntil)
                 .invoke(l -> LOG.debug("Independent magicItems: {}",
                         l.stream().map(m -> m.magicItem().index()).toList()))
                 .onItem().transformToMulti(l -> Multi.createFrom().iterable(l))
@@ -58,12 +58,14 @@ public class AipiCoService {
     }
 
     Multi<MagicItemWithNotes> solveMagicItemWithDependents(MagicItemWithNotes magicItemWithNotes){
-        LOG.debug("solveMagicItemWithDependents for MagicItem: {}", magicItemWithNotes.magicItem().index());
+        LOG.debug("solveMagicItemWithDependents for MagicItem: {} (until = {})",
+                magicItemWithNotes.magicItem().index(), magicItemWithNotes.until().get());
         return postMagic(magicItemWithNotes)
                 .map(MagicItemWithNotes::findReadyDependents)
                 .map(l -> l.stream()
                         .filter(m -> !m.pickedForRequest().getAndSet(true))
                         .toList())
+                .map(this::sortByUntil)
                 .invoke(l -> LOG.debug("Picked ready for request dependents of MagicItem: {}: {}",
                         magicItemWithNotes.magicItem().index(),
                         l.stream().map(m -> m.magicItem().index()).toList()))
@@ -133,6 +135,17 @@ public class AipiCoService {
     List<MagicItemWithNotes> findIndependentMagicItems(List<MagicItemWithNotes> magicItems){
         return magicItems.stream()
                 .filter(MagicItemWithNotes::isIndependent)
+                .toList();
+    }
+
+    List<MagicItemWithNotes> updateUntil(List<MagicItemWithNotes> magicItems){
+        magicItems.forEach(MagicItemWithNotes::updateUntilRecursively);
+        return magicItems;
+    }
+
+    List<MagicItemWithNotes> sortByUntil(List<MagicItemWithNotes> magicItems){
+        return magicItems.stream()
+                .sorted(Comparator.nullsLast(Comparator.comparing(m -> m.until().get())))
                 .toList();
     }
 
