@@ -2,6 +2,8 @@
 
 This is solution for the "Get Magic" task using "AIπ.Co".
 
+Solution requires Java 21.
+
 Easiest way to start service is 
 ```shell script
 ./mvnw quarkus:dev
