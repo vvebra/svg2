@@ -33,4 +33,30 @@ public record Issue(String code, String message, String expected, String receive
 
         return params.expected().after() - params.actual();
     }
+
+    public String getProofMessage(){
+        if (path != null && !path.isEmpty() && path.getFirst().equals("proof")){
+            return message;
+        }
+
+        return null;
+    }
+
+    public boolean isMissingDependency(){
+        return message != null && message.equalsIgnoreCase("Required")
+                && path != null && path.size() == 2 && path().getFirst().equals("responses")
+                && getNumberOrNull(path().get(1)) != null;
+    }
+
+    public Integer getMissingDependency(){
+        return isMissingDependency() ? getNumberOrNull(path().get(1)) : null;
+    }
+
+    Integer getNumberOrNull(String n){
+        try {
+            return Integer.parseInt(n);
+        } catch (Exception e){
+            return null;
+        }
+    }
 }

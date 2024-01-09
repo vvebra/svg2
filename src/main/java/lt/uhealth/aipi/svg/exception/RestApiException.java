@@ -40,4 +40,12 @@ public class RestApiException extends RuntimeException {
     public RestError getRestError() {
         return restError;
     }
+
+    public boolean isMissingProof(){
+        return restError != null && restError.isMissingProof();
+    }
+
+    public boolean isMissingDependencies(){
+        return restError != null && restError.isMissingDependencies();
+    }
 }

@@ -1,60 +1,37 @@
 package lt.uhealth.aipi.svg.model;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import lt.uhealth.aipi.svg.util.JsonReader;
 
 public record MagicItemWithNotes(int index,
                                  String magic,
                                  MagicItem magicItem,
                                  String magicItemString,
-                                 AtomicReference<Map<Integer, MagicItemWithNotes>> dependsOn,
-                                 AtomicReference<Map<Integer, MagicItemWithNotes>> dependents,
+                                 Map<Integer, MagicItemWithNotes> dependsOn,
+                                 Map<Integer, MagicItemWithNotes> dependents,
                                  AtomicReference<Long> until,
                                  AtomicBoolean pickedForRequest,
-                                 AtomicReference<Answer> answer) {
+                                 AtomicReference<Answer> answer,
 
-    public boolean isIndependent(){
-        return this.magicItem.isIndependent();
-    }
+                                 AtomicReference<Map<Integer, MagicItemWithNotes>> allMagicItems) {
 
     public MagicItemWithNotes withAnswer(String answerString) {
         this.answer.set(Answer.fromAnswerString(answerString));
         return this;
     }
 
-    public Set<Integer> getDependencies() {
-        return magicItem.getDependencies();
-    }
-
-    public MagicItemWithNotes withDependsOn(Map<Integer, MagicItemWithNotes> dependsOn) {
-        this.dependsOn.set(getDependencies().stream()
-                .map(dependsOn::get)
-                .collect(Collectors.toUnmodifiableMap(m -> m.magicItem.index(), Function.identity())));
-
-        return this;
-    }
-
-    public MagicItemWithNotes withDependents(Map<Integer, MagicItemWithNotes> dependents) {
-        this.dependents.set(dependents);
-        return this;
-    }
-
-    public MagicItemWithNotes withImmutableDependents(){
-        this.dependents.set(Map.copyOf(this.dependents.get()));
-        return this;
-    }
-
-    boolean isReady(){
-        return dependsOn.get().values().stream().allMatch(m -> m.answer().get() != null);
+    public boolean isReady(){
+        return dependsOn.values().stream().allMatch(m -> m.answer().get() != null);
     }
 
     public List<MagicItemWithNotes> findReadyDependents(){
-        return dependents.get().values().stream().filter(MagicItemWithNotes::isReady).toList();
+        if (answer.get() == null){
+            return List.of();
+        }
+        return dependents.values().stream().filter(MagicItemWithNotes::isReady).toList();
     }
 
     public static MagicItemWithNotes create(int index, String magic, String magicItemString) {
@@ -69,8 +46,8 @@ public record MagicItemWithNotes(int index,
 
         MagicItem magicItem = JsonReader.readValue(json, MagicItem.class);
         return new MagicItemWithNotes(index, magic, magicItem, magicItemString,
-                new AtomicReference<>(), new AtomicReference<>(), new AtomicReference<>(),
-                new AtomicBoolean(false), new AtomicReference<>());
+                new ConcurrentHashMap<>(), new ConcurrentHashMap<>(), new AtomicReference<>(),
+                new AtomicBoolean(false), new AtomicReference<>(), new AtomicReference<>());
     }
 
     public Long updateUntilRecursively(){
@@ -87,7 +64,7 @@ public record MagicItemWithNotes(int index,
 
         currentPath.add(index);
 
-        long minUntilOfDependents = dependents.get().values().stream()
+        long minUntilOfDependents = dependents.values().stream()
                 .map(m -> m.updateUntilRecursively(currentPath))
                 .filter(Objects::nonNull)
                 .mapToLong(l -> l)

@@ -17,4 +17,4 @@ quarkus:
     #  scope: request-response
     #  body-limit: 4096
     aipico:
-      url: "https://europe-west1-uh-protected.cloudfunctions.net/aipico"
+      url: "https://europe-west1-uh-protected.cloudfunctions.net/aipico2"
